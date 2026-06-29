@@ -2,7 +2,7 @@ import { checkout, polar, portal } from "@polar-sh/better-auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { polarclient } from "./polar";
-
+import { dash } from "@better-auth/infra";
 import prisma from "@/lib/db";
 
 export const auth = betterAuth({
@@ -14,6 +14,7 @@ export const auth = betterAuth({
     autoSignIn: true,
   },
   plugins: [
+    dash(),
     polar({
       client: polarclient,
       createCustomerOnSignUp: true,
