@@ -1,5 +1,7 @@
+// src/components/upgrade-modal.tsx
 "use client";
-import { authClient } from "@/lib/auth-client";
+
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +19,14 @@ interface UpgradeModalProps {
 }
 
 export const UpgradeModal = ({ open, onOpenchange }: UpgradeModalProps) => {
+  const router = useRouter();
+
+  const handleUpgrade = () => {
+    // Redirect to subscription page
+    router.push("/subscription");
+    onOpenchange(false);
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenchange}>
       <AlertDialogContent>
@@ -29,9 +39,7 @@ export const UpgradeModal = ({ open, onOpenchange }: UpgradeModalProps) => {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => authClient.checkout({ slug: "pro" })}
-          >
+          <AlertDialogAction onClick={handleUpgrade}>
             Upgrade Now
           </AlertDialogAction>
         </AlertDialogFooter>

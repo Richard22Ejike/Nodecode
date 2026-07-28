@@ -1,25 +1,41 @@
-import { headers } from "next/headers";
+// src/lib/auth-utils.ts
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { auth } from "./auth";
 
 export const requireAuth = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
+  const { userId } = await auth();
+  
+  if (!userId) {
     redirect("/login");
   }
-
-  return session;
+  
+  return userId;
 };
 
-export const requireUnauth = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (session) {
-    redirect("/");
+// For checking if user has pro
+export const requirePro = async () => {
+  const { userId, has } = await auth();
+  
+  if (!userId) {
+    redirect("/login");
   }
+  
+  const hasPro = has({ plan: "pro" });
+  
+  if (!hasPro) {
+    redirect("/subscription");
+  }
+  
+  return { userId, hasPro };
+};
 
-  return session;
+// For auth pages (login, signup) - redirect to dashboard if already authenticated
+export const requireUnauth = async () => {
+  const { userId } = await auth();
+  
+  if (userId) {
+    redirect("/workflows");
+  }
+  
+  return null;
 };

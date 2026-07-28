@@ -1,5 +1,7 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Provider } from "jotai";
 import { TRPCReactProvider } from "@/trpc/client";
 import { Toaster } from "@/components/ui/sonner";
@@ -31,14 +33,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TRPCReactProvider>
-          <NuqsAdapter>
-            <Provider>
-              {children}
-              <Toaster />
-            </Provider>
-          </NuqsAdapter>
-        </TRPCReactProvider>
+        <ClerkProvider
+          signInForceRedirectUrl="/workflows"
+          signUpForceRedirectUrl="/workflows"
+        >
+          <TRPCReactProvider>
+            <NuqsAdapter>
+              <Provider>
+                {children}
+                <Toaster />
+              </Provider>
+            </NuqsAdapter>
+          </TRPCReactProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

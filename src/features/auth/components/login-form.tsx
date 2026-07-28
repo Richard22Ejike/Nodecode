@@ -1,11 +1,14 @@
+// src/features/auth/components/login-form.tsx
 "use client";
-import z from "zod";
+
+import { useSignIn, useClerk } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,10 +27,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
 
 const loginSchema = z.object({
-  email: z.email("Please enter a valid email address"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -35,6 +37,9 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const LoginForm = () => {
   const router = useRouter();
+  const { signIn } = useSignIn();
+  const { setActive } = useClerk();
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -44,21 +49,51 @@ export const LoginForm = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    await authClient.signIn.email(
-      {
-        email: values.email,
+    if (!signIn) return;
+
+    try {
+      // Use the password method for email/password sign-in
+      const result = await signIn.password({
+        identifier: values.email,
         password: values.password,
-        // callbackURL: "/",
-      },
-      {
-        onSuccess: () => {
-          router.push("/");
-        },
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-        },
+      });
+
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-    );
+
+      // After successful password verification, the sign-in should be complete
+      // The status can be checked on the signIn object
+      if (signIn.status === "complete") {
+        await setActive({ session: signIn.createdSessionId });
+        router.push("/workflows");
+        toast.success("Welcome back!");
+      } else {
+        // Handle other statuses
+        console.log("Sign-in status:", signIn.status);
+        toast.info("Please complete the sign-in process");
+      }
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      toast.error(error.message || "Failed to sign in");
+    }
+  };
+
+  const handleOAuthSignIn = async (provider: "google" | "github") => {
+    try {
+      // Use the Clerk instance to redirect to OAuth
+      const clerk = useClerk();
+      await clerk.redirectToSignIn({
+        redirectUrl: "/sso-callback",
+          signInForceRedirectUrl: "/workflows",
+     
+        // For OAuth, you need to use the strategy parameter
+        // This might be available through a different method
+      });
+    } catch (error: any) {
+      console.error("OAuth error:", error);
+      toast.error(error.message || "Failed to sign in with provider");
+    }
   };
 
   const isPending = form.formState.isSubmitting;
@@ -80,6 +115,7 @@ export const LoginForm = () => {
                     className="w-full"
                     type="button"
                     disabled={isPending}
+                    onClick={() => handleOAuthSignIn("github")}
                   >
                     <Image
                       src="/logos/github.svg"
@@ -94,6 +130,7 @@ export const LoginForm = () => {
                     className="w-full"
                     type="button"
                     disabled={isPending}
+                    onClick={() => handleOAuthSignIn("google")}
                   >
                     <Image
                       src="/logos/google.svg"
@@ -103,6 +140,16 @@ export const LoginForm = () => {
                     />
                     Continue with Google
                   </Button>
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with email
+                    </span>
+                  </div>
                 </div>
                 <div className="grid gap-6">
                   <FormField
@@ -140,7 +187,7 @@ export const LoginForm = () => {
                     )}
                   />
                   <Button type="submit" className="w-full" disabled={isPending}>
-                    Login
+                    {isPending ? "Signing in..." : "Login"}
                   </Button>
                 </div>
                 <div className="text-center text-sm">

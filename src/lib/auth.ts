@@ -1,43 +1,26 @@
-import { checkout, polar, portal } from "@polar-sh/better-auth";
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { polarclient } from "./polar";
-import { dash } from "@better-auth/infra";
-import prisma from "@/lib/db";
+// lib/auth.ts
+import { clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3002",
-  database: prismaAdapter(prisma, {
-    provider: "postgresql",
-  }),
-    emailAndPassword: {
-    enabled: true,
-    autoSignIn: true,
-  },
- 
-  plugins: [
-    dash(),
-  //   polar({
-  //     client: polarclient,
-  //     createCustomerOnSignUp: true,
-  //      trustedOrigins: [
-  //   "http://localhost:3002",
-  //   "http://localhost:3000",
- 
-  // ],
-  //     use: [
-  //       checkout({
-  //         products: [
-  //           {
-  //            productId: "95f0d378-4a1f-48e4-baf9-8c0ab0fbd8c8",
-  //            slug: "base-pro"
-  //           },
-  //         ],
-  //         successUrl: process.env.POLAR_SUCCESS_URL,
-  //         authenticatedUsersOnly: true,
-  //       }),
-  //       portal(),
-  //     ],
-  //   }),
-  ],
-});
+// Remove better-auth imports and use Clerk instead
+export { auth, clerkClient };
+
+// Helper to check if user has pro plan
+export async function checkUserHasPro() {
+  const { userId, has } = await auth();
+  
+  if (!userId) {
+    return { isAuthenticated: false, hasPro: false };
+  }
+
+  const hasPro = has({ plan: "pro" });
+  return { isAuthenticated: true, hasPro };
+}
+
+// Get GitHub token from Clerk
+export async function getGitHubToken(userId: string) {
+  const client = await clerkClient();
+  const tokens = await client.users.getUserOauthAccessToken(userId, "github");
+  return tokens.data[0]?.token;
+}

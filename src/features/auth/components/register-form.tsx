@@ -1,11 +1,14 @@
+// src/features/auth/components/register-form.tsx
 "use client";
-import z from "zod";
+
+import { useSignUp, useClerk } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,13 +27,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
 
 const registerSchema = z
   .object({
-    email: z.email("Please enter a valid email address"),
-    password: z.string().min(1, "Password is required"),
-    confirmPassword: z.string().min(1, "Password is required"),
+    name: z.string().min(2, "Name must be at least 2 characters").optional(),
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -41,9 +44,13 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const RegisterForm = () => {
   const router = useRouter();
+  const { signUp } = useSignUp();
+  const { setActive } = useClerk();
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -51,22 +58,61 @@ export const RegisterForm = () => {
   });
 
   const onSubmit = async (values: RegisterFormValues) => {
-    await authClient.signUp.email(
-      {
-        name: values.email,
-        email: values.email,
+    if (!signUp) return;
+
+    try {
+      // Create the sign-up with email and password
+      const result = await signUp.create({
+        emailAddress: values.email,
         password: values.password,
-        // callbackURL: "/",
-      },
-      {
-        onSuccess: () => {
-          router.push("/");
-        },
-        onError: (ctx) => {
-          toast.error(ctx.error.message);
-        },
+        firstName: values.name?.split(" ")[0] || "",
+        lastName: values.name?.split(" ").slice(1).join(" ") || "",
+      });
+
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-    );
+
+      // Check if sign-up is complete
+      if (signUp.status === "complete") {
+        await setActive({ session: signUp.createdSessionId });
+        router.push("/workflows");
+        toast.success("Account created successfully!");
+      } else {
+        // Handle other statuses
+        console.log("Sign-up status:", signUp.status);
+        
+        // If email verification is required
+        if (signUp.status === "missing_requirements" || signUp.status === "abandoned") {
+          // Send verification email
+          const verificationResult = await signUp.verifications.sendEmailCode();
+          if (verificationResult.error) {
+            throw new Error(verificationResult.error.message);
+          }
+          toast.info("Please check your email for verification");
+          // Redirect to verification page
+          router.push("/verify-email");
+        } else {
+          toast.info("Please complete the sign-up process");
+        }
+      }
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+      toast.error(error.message || "Failed to create account");
+    }
+  };
+
+  const handleOAuthSignUp = async (provider: "google" | "github") => {
+    try {
+      const clerk = useClerk();
+      await clerk.redirectToSignUp({
+        redirectUrl: "/sso-callback",
+        signUpForceRedirectUrl: "/workflows",
+      });
+    } catch (error: any) {
+      console.error("OAuth error:", error);
+      toast.error(error.message || "Failed to sign up with provider");
+    }
   };
 
   const isPending = form.formState.isSubmitting;
@@ -76,7 +122,7 @@ export const RegisterForm = () => {
       <Card>
         <CardHeader className="text-center">
           <CardTitle>Get Started</CardTitle>
-          <CardDescription>Create Your account to get started</CardDescription>
+          <CardDescription>Create your account to get started</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -88,6 +134,7 @@ export const RegisterForm = () => {
                     className="w-full"
                     type="button"
                     disabled={isPending}
+                    onClick={() => handleOAuthSignUp("github")}
                   >
                     <Image
                       src="/logos/github.svg"
@@ -102,6 +149,7 @@ export const RegisterForm = () => {
                     className="w-full"
                     type="button"
                     disabled={isPending}
+                    onClick={() => handleOAuthSignUp("google")}
                   >
                     <Image
                       src="/logos/google.svg"
@@ -112,7 +160,34 @@ export const RegisterForm = () => {
                     Continue with Google
                   </Button>
                 </div>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or sign up with email
+                    </span>
+                  </div>
+                </div>
                 <div className="grid gap-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="John Doe"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="email"
@@ -165,7 +240,7 @@ export const RegisterForm = () => {
                     )}
                   />
                   <Button type="submit" className="w-full" disabled={isPending}>
-                    Sign Up
+                    {isPending ? "Creating account..." : "Sign Up"}
                   </Button>
                 </div>
                 <div className="text-center text-sm">

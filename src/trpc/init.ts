@@ -1,52 +1,135 @@
-import { auth } from "@/lib/auth";
-import { polarclient } from "@/lib/polar";
+// src/trpc/init.ts
 import { initTRPC, TRPCError } from "@trpc/server";
-import { headers } from "next/headers";
 import { cache } from "react";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import superjson from "superjson";
+
+// Create the context with authentication
 export const createTRPCContext = cache(async () => {
-  /**
-   * @see: https://trpc.io/docs/server/context
-   */
-  return { userId: "user_123" };
+  try {
+    const authData = await auth();
+    
+    if (!authData || !authData.userId) {
+      return {
+        userId: null,
+        isAuthenticated: false,
+        hasPro: false,
+        hasPremium: false,
+        user: null,
+      };
+    }
+
+    const { userId, has } = authData;
+    
+    // Get full user data from Clerk
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    
+    // Check for both pro and premium plans
+    const hasPro = has?.({ plan: "pro" }) || false;
+    const hasPremium = has?.({ plan: "premium" }) || false;
+    
+    return {
+      userId,
+      isAuthenticated: true,
+      hasPro,
+      hasPremium: hasPro || hasPremium,
+      plan: hasPremium ? "premium" : hasPro ? "pro" : "free",
+      user: {
+        id: userId,
+        email: user.emailAddresses[0]?.emailAddress,
+        name: user.firstName || user.username || user.emailAddresses[0]?.emailAddress,
+        image: user.imageUrl,
+        clerkUser: user,
+      },
+    };
+  } catch (error) {
+    console.error("❌ Error creating tRPC context:", error);
+    return {
+      userId: null,
+      isAuthenticated: false,
+      hasPro: false,
+      hasPremium: false,
+      plan: "free",
+      user: null,
+    };
+  }
 });
 
-const t = initTRPC.create({
+// Initialize tRPC
+const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
 });
 
+// Base router and procedure helpers
 export const createTRPCRouter = t.router;
-export const createCallerFactory = t.createCallerFactory;
 export const baseProcedure = t.procedure;
-export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    throw new TRPCError({
+
+// Protected procedure (requires authentication)
+export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.userId || !ctx.user) {
+    throw new TRPCError({ 
       code: "UNAUTHORIZED",
-      message: "Unauthorized",
+      message: "You must be logged in to access this resource"
     });
   }
-  return next({ ctx: { ...ctx, auth: session } });
+  return next({
+    ctx: {
+      ...ctx,
+      auth: {
+        user: ctx.user,
+        userId: ctx.userId,
+      },
+    },
+  });
 });
 
-export const premiumProcedure = protectedProcedure.use(
-  async ({ ctx, next }) => {
-    const customer = await polarclient.customers.getStateExternal({
-      externalId: ctx.auth.user.id,
+// Premium procedure (requires premium subscription)
+export const premiumProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.userId || !ctx.user) {
+    throw new TRPCError({ 
+      code: "UNAUTHORIZED",
+      message: "You must be logged in to access this resource"
     });
-
-    if (
-      !customer.activeSubscriptions ||
-      customer.activeSubscriptions.length === 0
-    ) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Active subscription required",
-      });
-    }
-
-    return next({ ctx: { ...ctx, customer } });
   }
-);
+  if (!ctx.hasPremium && !ctx.hasPro) {
+    throw new TRPCError({ 
+      code: "FORBIDDEN", 
+      message: "Premium plan required to access this resource"
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      auth: {
+        user: ctx.user,
+        userId: ctx.userId,
+      },
+    },
+  });
+});
+
+// Pro procedure (requires pro subscription)
+export const proProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.userId || !ctx.user) {
+    throw new TRPCError({ 
+      code: "UNAUTHORIZED",
+      message: "You must be logged in to access this resource"
+    });
+  }
+  if (!ctx.hasPro) {
+    throw new TRPCError({ 
+      code: "FORBIDDEN", 
+      message: "Pro plan required to access this resource"
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      auth: {
+        user: ctx.user,
+        userId: ctx.userId,
+      },
+    },
+  });
+});
