@@ -1,16 +1,13 @@
-import { createTRPCRouter } from "../init";
-import { workflowsRouter } from "@/features/workflows/server/routers";
-import {
-   baseProcedure
+import { credentialsRouter } from '@/features/credentials/server/router';
+import { createTRPCRouter } from '../init';
+import { workflowsRouter } from '@/features/workflows/server/router';
+import { executionsRouter } from '@/features/executions-history/server/router';
 
-} from "@/trpc/init";
+
 export const appRouter = createTRPCRouter({
   workflows: workflowsRouter,
-  testAi: baseProcedure
-    .mutation(async () => {
-      // Your AI test logic here
-      return { success: true };
-    }),
+  credentials: credentialsRouter,
+  executions: executionsRouter,
 });
-
+// export type definition of API
 export type AppRouter = typeof appRouter;

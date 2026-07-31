@@ -7,8 +7,8 @@ import {
   EditorError,
   EditorLoading,
   Editor,
-} from "@/features/editor/components/editor";
-import { EditorHeader } from "@/features/editor/components/editor-header";
+} from "@/features/editor/components/Editor";
+import { EditorHeader } from "@/features/editor/components/EditorHeader";
 
 interface PageProps {
   params: Promise<{

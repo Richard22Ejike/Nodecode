@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
@@ -15,16 +15,19 @@ datasource db {
 }
 
 model User {
-  id            String     @id
+  id            String    @id
   name          String
   email         String
-  emailVerified Boolean    @default(false)
+  emailVerified Boolean   @default(false)
   image         String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @default(now()) @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+
   workflows     Workflow[]
+
+  credentials   Credential[]
 
   @@unique([email])
   @@map("user")
@@ -42,6 +45,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
+  @@index([userId])
   @@map("session")
 }
 
@@ -61,6 +65,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@index([userId])
   @@map("account")
 }
 
@@ -70,21 +75,44 @@ model Verification {
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @updatedAt
 
+  @@index([identifier])
   @@map("verification")
 }
 
-model Workflow {
-  id          String       @id @default(cuid())
-  name        String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  nodes       Node[]
-  connections Connection[]
+model Credential {
+  id    String  @id  @default(cuid())
+  name  String
+  value String
+  type  CredentialType
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  nodes Node[]
+}
+
+enum CredentialType {
+  GEMINI
+  OPENAI
+  TELEGRAM
+}
+
+model Workflow {
+  id    String  @id  @default(cuid())
+  name  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId String 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  nodes Node[]
+  connections Connection[]
+  executions Execution[]
 }
 
 enum NodeType {
@@ -92,35 +120,73 @@ enum NodeType {
   MANUAL_TRIGGER
   HTTP_REQUEST
   GOOGLE_FORM_TRIGGER
+  STRIPE_TRIGGER
+  GEMINI
+  OPENAI
+  DISCORD
+  SLACK
+  TELEGRAM
 }
 
 model Node {
-  id                String       @id @default(cuid())
-  workflowId        String
-  workflow          Workflow     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  name              String
-  type              NodeType
-  position          Json
-  data              Json         @default("{}")
-  outputConnections Connection[] @relation("FromNode")
-  inputConnections  Connection[] @relation("ToNode")
+  id    String  @id  @default(cuid())
+  workflowId String 
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  
+  name  String
+  type NodeType
+  position Json
+  data Json @default("{}")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  outputConnections Connection[] @relation("FromNode")
+  inputConnections Connection[] @relation("toNode")
+
+  credentialId String?
+  credential Credential? @relation(fields: [credentialId], references: [id])
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Connection {
-  id         String   @id @default(cuid())
-  workflowId String
-  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  id    String  @id  @default(cuid())
+  workflowId String 
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  
   fromNodeId String
-  fromNode   Node     @relation("FromNode", fields: [fromNodeId], references: [id], onDelete: Cascade)
-  toNodeId   String
-  toNode     Node     @relation("ToNode", fields: [toNodeId], references: [id], onDelete: Cascade)
-  fromOutput String   @default("main")
-  toInput    String   @default("main")
+  fromNode Node @relation("FromNode", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNodeId String
+  toNode Node @relation("toNode", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  fromOutput String @default("main")
+  toInput String @default("main")
+  
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @updatedAt
 
   @@unique([fromNodeId, toNodeId, fromOutput, toInput])
+}
+
+enum ExecutionStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+model Execution {
+  id    String  @id  @default(cuid())
+
+  workflowId String
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  status ExecutionStatus @default(RUNNING)
+  error String? @db.Text
+  errorStack String? @db.Text
+
+  startedAt  DateTime @default(now())
+  completedAt  DateTime?
+
+  inngestEventId String @unique
+
+  output Json?
 }
