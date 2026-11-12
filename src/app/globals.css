@@ -3,11 +3,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Nodebase: "patch bay" identity.
+ * Ink (blue-black) surfaces in dark, chalk-cool in light. One signal accent
+ * (amber) carries connections, running state and primary actions. Success,
+ * warning, error and info each own a separate hue so state never reads as
+ * brand. All colours are oklch.
+ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans:
+    var(--font-instrument-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono:
+    var(--font-spline-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -37,12 +48,22 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --font-serif: Source Serif 4, serif;
-  --radius: 0.425rem;
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* New semantic + signal tokens */
+  --color-signal: var(--signal);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-line: var(--line);
+  --color-canvas: var(--canvas);
+
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 7px;
+  --radius-xl: 8px;
   --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
   --tracking-tight: calc(var(--tracking-normal) - 0.025em);
   --tracking-wide: calc(var(--tracking-normal) + 0.025em);
@@ -65,148 +86,424 @@
   --shadow-blur: var(--shadow-blur);
   --shadow-opacity: var(--shadow-opacity);
   --color-shadow-color: var(--shadow-color);
-  --color-destructive-foreground: var(--destructive-foreground);
 }
 
+/* ---------------------------------------------------------------- Light */
 :root {
-  --radius: 0.425rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.3211 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.3211 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.3211 0 0);
-  --primary: oklch(0.6397 0.172 36.4421);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.967 0.0029 264.5419);
-  --secondary-foreground: oklch(0.425461 0.0263 256.8018);
-  --muted: oklch(0.9846 0.0017 247.8389);
-  --muted-foreground: oklch(0.551 0.0234 264.3637);
-  --accent: oklch(0.922 0 0);
-  --accent-foreground: oklch(0.371 0 0);
-  --destructive: oklch(0.6368 0.2078 25.3313);
-  --border: oklch(0.9022 0.0052 247.8822);
-  --input: oklch(0.97 0.0029 264.542);
-  --ring: oklch(0.6397 0.172 36.4421);
-  --chart-1: oklch(0.7156 0.0605 248.6845);
-  --chart-2: oklch(0.7875 0.0917 35.9616);
-  --chart-3: oklch(0.5778 0.0759 254.1573);
-  --chart-4: oklch(0.5016 0.0849 259.4902);
-  --chart-5: oklch(0.425241 0.0952 264.0306);
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.3211 0 0);
-  --sidebar-primary: oklch(0.6397 0.172 36.4421);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.922 0 0);
-  --sidebar-accent-foreground: oklch(0.371 0 0);
-  --sidebar-border: oklch(0.9276 0.0058 264.5313);
-  --sidebar-ring: oklch(0.6397 0.172 36.4421);
-  --destructive-foreground: oklch(1 0 0);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Source Serif 4, serif;
-  --font-mono: JetBrains Mono, monospace;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-opacity: 0.1;
+  color-scheme: light;
+  --radius: 0.4375rem;
+
+  --background: oklch(0.975 0.006 255);
+  --foreground: oklch(0.22 0.03 262);
+  --card: oklch(0.995 0.003 255);
+  --card-foreground: oklch(0.22 0.03 262);
+  --popover: oklch(0.995 0.003 255);
+  --popover-foreground: oklch(0.22 0.03 262);
+
+  /* Signal amber; ink text on it holds ~9:1 */
+  --primary: oklch(0.77 0.165 62);
+  --primary-foreground: oklch(0.2 0.04 55);
+  --secondary: oklch(0.945 0.01 255);
+  --secondary-foreground: oklch(0.3 0.03 262);
+  --muted: oklch(0.955 0.008 255);
+  --muted-foreground: oklch(0.47 0.03 260);
+  --accent: oklch(0.93 0.014 255);
+  --accent-foreground: oklch(0.22 0.03 262);
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.89 0.012 258);
+  --input: oklch(0.64 0.02 258);
+  --ring: oklch(0.62 0.17 55);
+
+  /* Semantic state, each its own hue */
+  --success: oklch(0.5 0.13 152);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.5 0.11 82);
+  --warning-foreground: oklch(0.2 0.04 85);
+  --info: oklch(0.5 0.13 245);
+  /* Amber that is safe to use as text/icon on light surfaces */
+  --signal: oklch(0.5 0.13 55);
+  /* Strong hairline for node outlines, handles and dividers that must read */
+  --line: oklch(0.66 0.02 258);
+
+  --chart-1: oklch(0.77 0.165 62);
+  --chart-2: oklch(0.65 0.12 215);
+  --chart-3: oklch(0.62 0.15 155);
+  --chart-4: oklch(0.55 0.17 295);
+  --chart-5: oklch(0.6 0.2 350);
+
+  --sidebar: oklch(0.96 0.009 255);
+  --sidebar-foreground: oklch(0.26 0.03 262);
+  --sidebar-primary: oklch(0.77 0.165 62);
+  --sidebar-primary-foreground: oklch(0.2 0.04 55);
+  --sidebar-accent: oklch(0.91 0.016 255);
+  --sidebar-accent-foreground: oklch(0.22 0.03 262);
+  --sidebar-border: oklch(0.89 0.012 258);
+  --sidebar-ring: oklch(0.62 0.17 55);
+
+  /* Canvas + texture */
+  --canvas: oklch(0.955 0.01 255);
+  --grid-dot: oklch(0.76 0.02 258 / 0.7);
+  --scroll-thumb: oklch(0.76 0.02 258);
+
+  /* Edge phases (read by ExecutionEdge) */
+  --edge-idle: oklch(0.62 0.02 258);
+  --edge-runnable: oklch(0.55 0.1 60);
+  --edge-active: oklch(0.7 0.17 58);
+  --edge-active-soft: oklch(0.8 0.13 70);
+  --edge-done: oklch(0.55 0.14 152);
+  --edge-error: oklch(0.55 0.2 27);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-color: oklch(0.25 0.04 262);
+  --shadow-opacity: 0.08;
   --shadow-blur: 3px;
   --shadow-spread: 0px;
   --shadow-offset-x: 0px;
   --shadow-offset-y: 1px;
   --letter-spacing: 0em;
   --spacing: 0.25rem;
-  --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.25);
+  --shadow-2xs: 0px 1px 1px 0px oklch(0.25 0.04 262 / 0.05);
+  --shadow-xs: 0px 1px 2px 0px oklch(0.25 0.04 262 / 0.06);
+  --shadow-sm:
+    0px 1px 2px 0px oklch(0.25 0.04 262 / 0.08), 0px 1px 1px -1px
+    oklch(0.25 0.04 262 / 0.06);
+  --shadow:
+    0px 1px 3px 0px oklch(0.25 0.04 262 / 0.08), 0px 1px 2px -1px
+    oklch(0.25 0.04 262 / 0.06);
+  --shadow-md:
+    0px 2px 4px -1px oklch(0.25 0.04 262 / 0.1), 0px 1px 2px 0px
+    oklch(0.25 0.04 262 / 0.06);
+  --shadow-lg:
+    0px 6px 12px -2px oklch(0.25 0.04 262 / 0.12), 0px 2px 4px -1px
+    oklch(0.25 0.04 262 / 0.06);
+  --shadow-xl:
+    0px 12px 20px -4px oklch(0.25 0.04 262 / 0.14), 0px 3px 6px -2px
+    oklch(0.25 0.04 262 / 0.07);
+  --shadow-2xl: 0px 20px 32px -8px oklch(0.25 0.04 262 / 0.2);
   --tracking-normal: 0em;
 }
 
+/* ----------------------------------------------------------------- Dark */
 .dark {
-  --background: oklch(0.2598 0.0306 262.6666);
-  --foreground: oklch(0.9219 0 0);
-  --card: oklch(0.3106 0.0301 268.6365);
-  --card-foreground: oklch(0.9219 0 0);
-  --popover: oklch(0.29 0.0249 268.3986);
-  --popover-foreground: oklch(0.9219 0 0);
-  --primary: oklch(0.6397 0.172 36.4421);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.3095 0.0266 266.7132);
-  --secondary-foreground: oklch(0.9219 0 0);
-  --muted: oklch(0.3095 0.0266 266.7132);
-  --muted-foreground: oklch(0.7155 0 0);
-  --accent: oklch(0.338 0.0589 267.5867);
-  --accent-foreground: oklch(0.8823 0.0571 254.1284);
-  --destructive: oklch(0.6368 0.2078 25.3313);
-  --border: oklch(0.3843 0.0301 269.7337);
-  --input: oklch(0.3843 0.0301 269.7337);
-  --ring: oklch(0.6397 0.172 36.4421);
-  --chart-1: oklch(0.7156 0.0605 248.6845);
-  --chart-2: oklch(0.7693 0.0876 34.1875);
-  --chart-3: oklch(0.5778 0.0759 254.1573);
-  --chart-4: oklch(0.5016 0.0849 259.4902);
-  --chart-5: oklch(0.425241 0.0952 264.0306);
-  --sidebar: oklch(0.31 0.0283 267.7408);
-  --sidebar-foreground: oklch(0.9219 0 0);
-  --sidebar-primary: oklch(0.6397 0.172 36.4421);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.338 0.0589 267.5867);
-  --sidebar-accent-foreground: oklch(0.8823 0.0571 254.1284);
-  --sidebar-border: oklch(0.3843 0.0301 269.7337);
-  --sidebar-ring: oklch(0.6397 0.172 36.4421);
-  --destructive-foreground: oklch(1 0 0);
-  --radius: 0.425rem;
-  --font-sans: Inter, sans-serif;
-  --font-serif: Source Serif 4, serif;
-  --font-mono: JetBrains Mono, monospace;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-opacity: 0.1;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-offset-x: 0px;
-  --shadow-offset-y: 1px;
-  --letter-spacing: 0em;
-  --spacing: 0.25rem;
-  --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0px 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.25);
+  color-scheme: dark;
+
+  --background: oklch(0.17 0.025 262);
+  --foreground: oklch(0.94 0.008 255);
+  --card: oklch(0.205 0.026 262);
+  --card-foreground: oklch(0.94 0.008 255);
+  --popover: oklch(0.23 0.027 262);
+  --popover-foreground: oklch(0.94 0.008 255);
+
+  --primary: oklch(0.8 0.165 68);
+  --primary-foreground: oklch(0.18 0.03 262);
+  --secondary: oklch(0.27 0.028 262);
+  --secondary-foreground: oklch(0.92 0.01 255);
+  --muted: oklch(0.25 0.026 262);
+  --muted-foreground: oklch(0.72 0.02 258);
+  --accent: oklch(0.29 0.03 262);
+  --accent-foreground: oklch(0.96 0.008 255);
+  --destructive: oklch(0.7 0.19 25);
+  --destructive-foreground: oklch(0.18 0.03 262);
+  --border: oklch(0.32 0.03 262);
+  --input: oklch(0.53 0.035 262);
+  --ring: oklch(0.8 0.15 70);
+
+  --success: oklch(0.76 0.17 152);
+  --success-foreground: oklch(0.18 0.03 152);
+  --warning: oklch(0.85 0.15 98);
+  --warning-foreground: oklch(0.2 0.04 95);
+  --info: oklch(0.76 0.11 235);
+  --signal: oklch(0.8 0.165 68);
+  --line: oklch(0.47 0.035 262);
+
+  --chart-1: oklch(0.8 0.165 68);
+  --chart-2: oklch(0.74 0.12 215);
+  --chart-3: oklch(0.74 0.16 155);
+  --chart-4: oklch(0.68 0.17 295);
+  --chart-5: oklch(0.7 0.2 350);
+
+  --sidebar: oklch(0.145 0.025 262);
+  --sidebar-foreground: oklch(0.92 0.01 255);
+  --sidebar-primary: oklch(0.8 0.165 68);
+  --sidebar-primary-foreground: oklch(0.18 0.03 262);
+  --sidebar-accent: oklch(0.25 0.03 262);
+  --sidebar-accent-foreground: oklch(0.96 0.008 255);
+  --sidebar-border: oklch(0.3 0.03 262);
+  --sidebar-ring: oklch(0.8 0.15 70);
+
+  --canvas: oklch(0.145 0.025 262);
+  --grid-dot: oklch(0.42 0.03 262 / 0.7);
+  --scroll-thumb: oklch(0.42 0.03 262);
+
+  --edge-idle: oklch(0.5 0.03 262);
+  --edge-runnable: oklch(0.72 0.12 65);
+  --edge-active: oklch(0.82 0.17 70);
+  --edge-active-soft: oklch(0.9 0.1 85);
+  --edge-done: oklch(0.76 0.17 152);
+  --edge-error: oklch(0.7 0.19 25);
+
+  --shadow-color: oklch(0.08 0.03 262);
+  --shadow-opacity: 0.4;
+  --shadow-2xs: 0px 1px 1px 0px oklch(0.08 0.03 262 / 0.3);
+  --shadow-xs: 0px 1px 2px 0px oklch(0.08 0.03 262 / 0.35);
+  --shadow-sm:
+    0px 1px 2px 0px oklch(0.08 0.03 262 / 0.4), 0px 1px 1px -1px
+    oklch(0.08 0.03 262 / 0.3);
+  --shadow:
+    0px 1px 3px 0px oklch(0.08 0.03 262 / 0.4), 0px 1px 2px -1px
+    oklch(0.08 0.03 262 / 0.3);
+  --shadow-md:
+    0px 2px 4px -1px oklch(0.08 0.03 262 / 0.5), 0px 1px 2px 0px
+    oklch(0.08 0.03 262 / 0.35);
+  --shadow-lg:
+    0px 6px 12px -2px oklch(0.08 0.03 262 / 0.55), 0px 2px 4px -1px
+    oklch(0.08 0.03 262 / 0.35);
+  --shadow-xl:
+    0px 12px 20px -4px oklch(0.08 0.03 262 / 0.6), 0px 3px 6px -2px
+    oklch(0.08 0.03 262 / 0.4);
+  --shadow-2xl: 0px 20px 32px -8px oklch(0.08 0.03 262 / 0.7);
 }
 
+/* ----------------------------------------------------------------- Base */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/70;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) transparent;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
     letter-spacing: var(--tracking-normal);
+    text-rendering: optimizeLegibility;
   }
-}
-
-@layer base {
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  /* Browser surfaces themed from the palette */
+  ::selection {
+    background: oklch(0.77 0.165 62 / 0.35);
+    color: inherit;
+  }
+  input,
+  textarea {
+    caret-color: var(--ring);
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
   button:not([disabled]),
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
 }
 
-/* React Flow node selection styles */
-.react-flow__node.selected #base-node {
-  @apply ring-3 ring-muted-foreground/25 shadow-lg;
+/* Dot-grid texture shared by the canvas motif and the auth backdrop */
+.bg-dot-grid {
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.25px);
+  background-size: 20px 20px;
+  background-position: 10px 10px;
+}
+
+/* ------------------------------------------------------------ React Flow */
+/*
+ * The canvas runs colorMode="dark", so React Flow puts `.dark` on its root.
+ * That scopes the ink tokens to everything inside the canvas, nodes included.
+ * Bumped specificity beats the library defaults regardless of CSS order.
+ */
+.react-flow.react-flow:is(.dark, .light) {
+  /* Text inside the canvas follows the canvas scope, not the page body */
+  color: var(--foreground);
+  --xy-background-color-default: var(--canvas);
+  --xy-background-pattern-dots-color-default: var(--grid-dot);
+  --xy-background-pattern-lines-color-default: var(--grid-dot);
+  --xy-background-pattern-cross-color-default: var(--grid-dot);
+
+  --xy-edge-stroke-default: var(--edge-idle);
+  --xy-edge-stroke-width-default: 1.5;
+  --xy-edge-stroke-selected-default: var(--primary);
+  --xy-connectionline-stroke-default: var(--primary);
+  --xy-connectionline-stroke-width-default: 2;
+
+  --xy-handle-background-color-default: var(--card);
+  --xy-handle-border-color-default: var(--line);
+
+  --xy-selection-background-color-default: oklch(0.8 0.165 68 / 0.08);
+  --xy-selection-border-default: 1px dashed var(--primary);
+
+  --xy-node-background-color-default: var(--card);
+  --xy-node-color-default: var(--card-foreground);
+  --xy-node-border-default: 1px solid var(--line);
+  --xy-node-border-radius-default: 6px;
+  --xy-node-boxshadow-hover-default: none;
+  --xy-node-boxshadow-selected-default: none;
+
+  --xy-minimap-background-color-default: var(--card);
+  --xy-minimap-mask-background-color-default: oklch(0.12 0.025 262 / 0.62);
+  --xy-minimap-mask-stroke-color-default: var(--primary);
+  --xy-minimap-mask-stroke-width-default: 1;
+  --xy-minimap-node-background-color-default: var(--line);
+  --xy-minimap-node-stroke-color-default: transparent;
+
+  --xy-controls-button-background-color-default: var(--card);
+  --xy-controls-button-background-color-hover-default: var(--accent);
+  --xy-controls-button-color-default: var(--foreground);
+  --xy-controls-button-color-hover-default: var(--foreground);
+  --xy-controls-button-border-color-default: var(--border);
+  --xy-controls-box-shadow-default: var(--shadow-sm);
+
+  --xy-attribution-background-color-default: transparent;
+  --xy-edge-label-background-color-default: var(--card);
+  --xy-edge-label-color-default: var(--foreground);
+  --xy-resize-background-color-default: var(--primary);
+}
+
+.react-flow__minimap,
+.react-flow__controls {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.react-flow__controls-button {
+  transition: background-color 150ms var(--ease-out-expo);
+}
+
+.react-flow__attribution {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: var(--primary);
+}
+
+/* Handles: a patch-bay jack that lights up while a cable is being dragged */
+.react-flow__handle {
+  transition:
+    background-color 150ms var(--ease-out-expo),
+    border-color 150ms var(--ease-out-expo);
+}
+.react-flow__handle.connectionindicator:hover,
+.react-flow__handle.connectingfrom,
+.react-flow__handle.connectingto {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+.react-flow__handle.connectingto.valid {
+  background-color: var(--success);
+  border-color: var(--success);
+}
+
+/* Selected node: amber hairline plus a soft outer ring */
+.react-flow__node.selected [data-slot="base-node"] {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 2px oklch(0.8 0.165 68 / 0.28),
+    var(--shadow-md);
+}
+
+/* Run state on nodes: amber while live, green/red once settled */
+.react-flow__node.execution-node--running {
+  filter: drop-shadow(0 2px 8px oklch(0.8 0.165 68 / 0.5));
+  animation: execution-node-pulse 1.4s ease-in-out infinite;
+}
+
+.react-flow__node.execution-node--success {
+  filter: drop-shadow(0 2px 5px oklch(0.76 0.17 152 / 0.3));
+}
+
+.react-flow__node.execution-node--error {
+  filter: drop-shadow(0 2px 5px oklch(0.7 0.19 25 / 0.4));
+}
+
+.react-flow__node.execution-node--off-path {
+  opacity: 0.4;
+}
+
+.react-flow__edge .execution-edge-flow {
+  stroke-dashoffset: 24;
+  animation: execution-edge-dash 1.8s linear infinite;
+}
+
+.react-flow__edge .execution-edge-flow--fast {
+  animation-duration: 0.8s;
+}
+
+@keyframes execution-edge-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes execution-node-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 2px 6px oklch(0.8 0.165 68 / 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 2px 12px oklch(0.8 0.165 68 / 0.75));
+  }
+}
+
+@keyframes node-status-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Multiplayer cursor labels keep to the same crisp corner radius */
+.lb-cursor {
+  font-family: var(--font-sans);
+}
+
+/* ---------------------------------------------------------------- Motion */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin),
+  *:not(.animate-spin)::before,
+  *:not(.animate-spin)::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations */
+    scroll-behavior: auto !important;
+  }
+  .react-flow__edge .execution-edge-flow {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .react-flow__node.execution-node--running {
+    animation: none;
+  }
+  .execution-edge-particle {
+    display: none;
+  }
+  .node-status-sweep .spinner {
+    animation: none;
+  }
 }

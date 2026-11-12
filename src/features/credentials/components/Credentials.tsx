@@ -1,82 +1,96 @@
 // src/features/credentials/components/Credentials.tsx
-"use client"
-import { EmptyView, EntityContainer, EntityHeader, EntityItem, EntityList, EntityPagination, EntitySearch, ErrorView, LoadingView } from '@/components/entity-components'
-import { useRouter } from 'next/navigation'
-import { useEntitySearch } from '@/hooks/use-entity-search'
-import { CredentialType } from '@/generated/prisma/browser'
-import { KeyIcon } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
-import { useCredentialsParams } from '../hooks/use-credential-params'
-import { useRemoveCredential, useSuspenseCredentials } from '../hooks/use-credential'
-import Image from 'next/image'
-import type { Credential } from '@/generated/prisma/browser'
+"use client";
+import { formatDistanceToNow } from "date-fns";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import {
+  EmptyView,
+  EntityContainer,
+  EntityHeader,
+  EntityItem,
+  EntityList,
+  EntityPagination,
+  EntitySearch,
+  ErrorView,
+  LoadingView,
+} from "@/components/entity-components";
+import type { Credential } from "@/generated/prisma/browser";
+import { CredentialType } from "@/generated/prisma/browser";
+import { useEntitySearch } from "@/hooks/use-entity-search";
+import {
+  useRemoveCredential,
+  useSuspenseCredentials,
+} from "../hooks/use-credential";
+import { useCredentialsParams } from "../hooks/use-credential-params";
 
 export const CredentialsSearch = () => {
-  const [params, setParams] = useCredentialsParams()
-  const {searchValue, onSearchChange} = useEntitySearch({
+  const [params, setParams] = useCredentialsParams();
+  const { searchValue, onSearchChange } = useEntitySearch({
     params,
-    setParams
-  })
+    setParams,
+  });
   return (
-    <EntitySearch 
+    <EntitySearch
       value={searchValue}
       onChange={onSearchChange}
       placeholder="Search Credentials"
     />
-  )
-}
+  );
+};
 
 export const CredentialsList = () => {
-  const credentials = useSuspenseCredentials()
-  
-  // Ensure credentials.data.items is an array
-  const items = credentials?.data?.items || []
-  
-  return (
-    <EntityList 
-        items={items}
-        getKey={(credential: Credential) => credential.id}
-        renderItem={(credential: Credential) => <CredentialItem data={credential}/>}
-        emptyView={<CredentialsEmpty />}
-    />
-  )
-}
+  const credentials = useSuspenseCredentials();
 
-export const CredentialsHeader = ({disabled}: {disabled?: boolean}) => {
+  // Ensure credentials.data.items is an array
+  const items = credentials?.data?.items || [];
+
   return (
-        <EntityHeader 
-            title="Credentials"
-            description="Create and manage your Credentials"
-            newButtonHref="/credentials/new"
-            newButtonLabel="New Credential"
-            disabled={disabled}
-        />
-  )
-}
+    <EntityList
+      items={items}
+      getKey={(credential: Credential) => credential.id}
+      renderItem={(credential: Credential) => (
+        <CredentialItem data={credential} />
+      )}
+      emptyView={<CredentialsEmpty />}
+    />
+  );
+};
+
+export const CredentialsHeader = ({ disabled }: { disabled?: boolean }) => {
+  return (
+    <EntityHeader
+      title="Credentials"
+      description="Create and manage your Credentials"
+      newButtonHref="/credentials/new"
+      newButtonLabel="New Credential"
+      disabled={disabled}
+    />
+  );
+};
 
 export const CredentialsPagination = () => {
-  const credentials = useSuspenseCredentials()
-  const [params, setParams] = useCredentialsParams()
+  const credentials = useSuspenseCredentials();
+  const [params, setParams] = useCredentialsParams();
 
   // Add safety checks
-  const totalPages = credentials?.data?.totalPages || 1
-  const page = credentials?.data?.page || 1
-  const isFetching = credentials?.isFetching || false
+  const totalPages = credentials?.data?.totalPages || 1;
+  const page = credentials?.data?.page || 1;
+  const isFetching = credentials?.isFetching || false;
 
   return (
-    <EntityPagination 
+    <EntityPagination
       disabled={isFetching}
       totalPages={totalPages}
       page={page}
       onPageChange={(page: number) => setParams({ ...params, page })}
     />
-  )
-}
+  );
+};
 
 export const CredentialsContainer = ({
-  children
+  children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) => {
   return (
     <EntityContainer
@@ -86,68 +100,65 @@ export const CredentialsContainer = ({
     >
       {children}
     </EntityContainer>
-  )
-}
+  );
+};
 
 export const CredentialsLoading = () => {
-  return <LoadingView message="Loading Credentials..."/>
-}
+  return <LoadingView message="Loading Credentials..." />;
+};
 
 export const CredentialsError = () => {
-  return <ErrorView message="Error Loading Credentials..."/>
-}
+  return <ErrorView message="Error Loading Credentials..." />;
+};
 
 export const CredentialsEmpty = () => {
-  const router = useRouter()
+  const router = useRouter();
 
   const handleCreate = () => {
-    router.push(`/credentials/new`)
-  }
+    router.push(`/credentials/new`);
+  };
   return (
-        <EmptyView
-            onNew={handleCreate}
-            message="No Credentials found. Get started by creating your First Credential"
-        />
-  )
-}
+    <EmptyView
+      onNew={handleCreate}
+      message="No Credentials found. Get started by creating your First Credential"
+    />
+  );
+};
 
 const credentialLogos: Record<CredentialType, string> = {
-    [CredentialType.GEMINI]: "/logos/gemini.svg",
-    [CredentialType.OPENAI]: "/logos/openai.svg",
-    [CredentialType.TELEGRAM]: "/logos/telegram.svg",
-}
+  [CredentialType.GEMINI]: "/logos/gemini.svg",
+  [CredentialType.OPENAI]: "/logos/openai.svg",
+  [CredentialType.TELEGRAM]: "/logos/telegram.svg",
+  [CredentialType.WHATSAPP]: "/logos/whatsapp.svg",
+};
 
-export const CredentialItem = ({
-  data
-}: {
-  data: Credential
-}) => {
-  const removeCredential = useRemoveCredential()
+export const CredentialItem = ({ data }: { data: Credential }) => {
+  const removeCredential = useRemoveCredential();
 
   const handleRemove = () => {
-    removeCredential.mutate({ id: data.id })
-  }
+    removeCredential.mutate({ id: data.id });
+  };
 
-  const logo = credentialLogos[data.type] || "/logos/openai.svg"
+  const logo = credentialLogos[data.type] || "/logos/openai.svg";
 
   return (
-    <EntityItem 
+    <EntityItem
       href={`/credentials/${data.id}`}
       title={data.name}
       subtitle={
         <>
           Updated {formatDistanceToNow(data.updatedAt, { addSuffix: true })}{" "}
           &bull; Created{" "}
-          {formatDistanceToNow(data.createdAt, { addSuffix: true })} 
+          {formatDistanceToNow(data.createdAt, { addSuffix: true })}
         </>
       }
       image={
-        <div className='size-8 flex items-center justify-center'>
+        <div className="size-8 flex items-center justify-center">
           <Image src={logo} alt={data.type} width={20} height={20} />
         </div>
       }
       onRemove={handleRemove}
       isRemoving={removeCredential.isPending}
     />
-  )
-}
+  );
+};

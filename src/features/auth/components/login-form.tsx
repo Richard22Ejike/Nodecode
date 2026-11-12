@@ -1,7 +1,7 @@
 // src/features/auth/components/login-form.tsx
 "use client";
 
-import { useSignIn, useClerk } from "@clerk/nextjs";
+import { useClerk, useSignIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,6 +27,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/lib/utils";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -73,26 +74,28 @@ export const LoginForm = () => {
         console.log("Sign-in status:", signIn.status);
         toast.info("Please complete the sign-in process");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Sign in error:", error);
-      toast.error(error.message || "Failed to sign in");
+      toast.error(getErrorMessage(error, "Failed to sign in"));
     }
   };
 
   const handleOAuthSignIn = async (provider: "google" | "github") => {
+    if (!signIn) return;
+
     try {
-      // Use the Clerk instance to redirect to OAuth
-      const clerk = useClerk();
-      await clerk.redirectToSignIn({
-        redirectUrl: "/sso-callback",
-          signInForceRedirectUrl: "/workflows",
-     
-        // For OAuth, you need to use the strategy parameter
-        // This might be available through a different method
+      const result = await signIn.sso({
+        strategy: `oauth_${provider}`,
+        redirectUrl: "/workflows",
+        redirectCallbackUrl: "/sso-callback",
       });
-    } catch (error: any) {
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+    } catch (error) {
       console.error("OAuth error:", error);
-      toast.error(error.message || "Failed to sign in with provider");
+      toast.error(getErrorMessage(error, "Failed to sign in with provider"));
     }
   };
 
@@ -122,6 +125,7 @@ export const LoginForm = () => {
                       alt="Github"
                       height={20}
                       width={20}
+                      className="dark:invert"
                     />
                     Continue with Github
                   </Button>
@@ -146,7 +150,7 @@ export const LoginForm = () => {
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
+                    <span className="bg-card px-2 tracking-wider text-[11px] text-muted-foreground">
                       Or continue with email
                     </span>
                   </div>

@@ -1,7 +1,7 @@
 // src/features/auth/components/register-form.tsx
 "use client";
 
-import { useSignUp, useClerk } from "@clerk/nextjs";
+import { useClerk, useSignUp } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,6 +27,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/lib/utils";
 
 const registerSchema = z
   .object({
@@ -81,9 +82,12 @@ export const RegisterForm = () => {
       } else {
         // Handle other statuses
         console.log("Sign-up status:", signUp.status);
-        
+
         // If email verification is required
-        if (signUp.status === "missing_requirements" || signUp.status === "abandoned") {
+        if (
+          signUp.status === "missing_requirements" ||
+          signUp.status === "abandoned"
+        ) {
           // Send verification email
           const verificationResult = await signUp.verifications.sendEmailCode();
           if (verificationResult.error) {
@@ -96,22 +100,28 @@ export const RegisterForm = () => {
           toast.info("Please complete the sign-up process");
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Sign up error:", error);
-      toast.error(error.message || "Failed to create account");
+      toast.error(getErrorMessage(error, "Failed to create account"));
     }
   };
 
   const handleOAuthSignUp = async (provider: "google" | "github") => {
+    if (!signUp) return;
+
     try {
-      const clerk = useClerk();
-      await clerk.redirectToSignUp({
-        redirectUrl: "/sso-callback",
-        signUpForceRedirectUrl: "/workflows",
+      const result = await signUp.sso({
+        strategy: `oauth_${provider}`,
+        redirectUrl: "/workflows",
+        redirectCallbackUrl: "/sso-callback",
       });
-    } catch (error: any) {
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+    } catch (error) {
       console.error("OAuth error:", error);
-      toast.error(error.message || "Failed to sign up with provider");
+      toast.error(getErrorMessage(error, "Failed to sign up with provider"));
     }
   };
 
@@ -141,6 +151,7 @@ export const RegisterForm = () => {
                       alt="Github"
                       height={20}
                       width={20}
+                      className="dark:invert"
                     />
                     Continue with Github
                   </Button>
@@ -165,7 +176,7 @@ export const RegisterForm = () => {
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
+                    <span className="bg-card px-2 tracking-wider text-[11px] text-muted-foreground">
                       Or sign up with email
                     </span>
                   </div>
@@ -239,6 +250,8 @@ export const RegisterForm = () => {
                       </FormItem>
                     )}
                   />
+                  {/* Mount point for Clerk's bot-protection (CAPTCHA) widget */}
+                  <div id="clerk-captcha" />
                   <Button type="submit" className="w-full" disabled={isPending}>
                     {isPending ? "Creating account..." : "Sign Up"}
                   </Button>

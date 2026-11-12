@@ -1,8 +1,9 @@
 // src/app/api/projects/route.ts
-import { z } from "zod";
+
 import { NextResponse } from "next/server";
-import { auth, clerkClient, getGitHubToken } from "@/lib/auth";
+import { z } from "zod";
 import { inngest } from "@/inngest/client";
+import { auth, getGitHubToken } from "@/lib/auth";
 
 const requestSchema = z.object({
   projectId: z.string(),
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
   if (!githubToken) {
     return NextResponse.json(
       { error: "GitHub not connected. Please reconnect your GitHub account." },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
   if (!internalKey) {
     return NextResponse.json(
       { error: "Server configuration error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 

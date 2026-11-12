@@ -1,7 +1,7 @@
 "use client";
 
-import React, { type ReactNode } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, type NodeProps, Position } from "@xyflow/react";
+import type { ReactNode } from "react";
 
 import { BaseNode } from "./base-node";
 
@@ -13,7 +13,7 @@ export type PlaceholderNodeProps = Partial<NodeProps> & {
 export function PlaceholderNode({ children, onClick }: PlaceholderNodeProps) {
   return (
     <BaseNode
-      className="bg-card w-auto h-auto border-dashed border-gray-400 p-4 text-center text-gray-400 shadow-none cursor-pointer hover:border-gray-50 hover:bg-gray-50"
+      className="bg-card/60 w-auto h-auto border-dashed border-line p-4 text-center text-muted-foreground shadow-none cursor-pointer hover:border-primary hover:bg-accent hover:text-foreground"
       onClick={onClick}
     >
       {children}

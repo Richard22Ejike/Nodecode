@@ -1,72 +1,74 @@
-import { Node, NodeProps, useReactFlow } from "@xyflow/react"
-import { memo, useState } from "react"
-import { BaseExecutionNode } from "../BaseExecutionNode"
-import { SlackDialog, SlackFormValues } from "./Dialog"
-import { useNodeStatus } from "../../hooks/use-node-status"
-import { fetchSlackRealtimeToken } from "./actions"
-import { SLACK_CHANNEL_NAME } from "@/inngest/channels/slack"
-
+import { type Node, type NodeProps, useReactFlow } from "@xyflow/react";
+import { memo, useState } from "react";
+import { SLACK_CHANNEL_NAME } from "@/inngest/channels/slack";
+import { useNodeStatus } from "../../hooks/use-node-status";
+import { BaseExecutionNode } from "../BaseExecutionNode";
+import { fetchSlackRealtimeToken } from "./actions";
+import { SlackDialog, type SlackFormValues } from "./Dialog";
 
 type SlackNodeData = {
-    webhookUrl?: string
-    content?: string
-}
+  webhookUrl?: string;
+  content?: string;
+};
 
-type SlackNodeType = Node<SlackNodeData>
+type SlackNodeType = Node<SlackNodeData>;
 
 export const SlackNode = memo((props: NodeProps<SlackNodeType>) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-    const [dialogOpen, setDialogOpen] = useState(false)
+  const nodeStatus = useNodeStatus({
+    nodeId: props.id,
+    channel: SLACK_CHANNEL_NAME,
+    topic: "status",
+    refreshToken: fetchSlackRealtimeToken,
+  });
 
-    const nodeStatus = useNodeStatus({
-        nodeId: props.id,
-        channel: SLACK_CHANNEL_NAME,
-        topic: "status",
-        refreshToken: fetchSlackRealtimeToken
-    })
+  const handleOpenSettings = () => setDialogOpen(true);
 
-    const handleOpenSettings = () => setDialogOpen(true)
-    
-    const { setNodes } = useReactFlow()
+  const { setNodes } = useReactFlow();
 
-    const handleSubmit = (values: SlackFormValues) => {
-        setNodes((nodes) => nodes.map((node) => {
-            if(node.id === props.id){
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        ...values
-                    }
-                }
-            }
-            return node
-        }))
-    }
-    
-    const nodeData = props.data
-    const description = nodeData?.content ? `Send ${nodeData.content.slice(0, 50)}...` : "Not Configured"
+  const handleSubmit = (values: SlackFormValues) => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === props.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              ...values,
+            },
+          };
+        }
+        return node;
+      }),
+    );
+  };
 
-    return (
-        <>
-            <SlackDialog 
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                onSubmit={handleSubmit}
-                defaultValues={nodeData}
-            />
-            <BaseExecutionNode
-                {...props}
-                id={props.id}
-                icon="/logos/slack.svg"
-                name="Slack"
-                status={nodeStatus}
-                description={description}
-                onSettings={handleOpenSettings}
-                onDoubleClick={handleOpenSettings}
-            />
-        </>
-    )
-})
+  const nodeData = props.data;
+  const description = nodeData?.content
+    ? `Send ${nodeData.content.slice(0, 50)}...`
+    : "Not Configured";
 
-SlackNode.displayName = "SlackNode"
+  return (
+    <>
+      <SlackDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={handleSubmit}
+        defaultValues={nodeData}
+      />
+      <BaseExecutionNode
+        {...props}
+        id={props.id}
+        icon="/logos/slack.svg"
+        name="Slack"
+        status={nodeStatus}
+        description={description}
+        onSettings={handleOpenSettings}
+        onDoubleClick={handleOpenSettings}
+      />
+    </>
+  );
+});
+
+SlackNode.displayName = "SlackNode";

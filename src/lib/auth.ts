@@ -1,7 +1,5 @@
 // lib/auth.ts
-import { clerkClient } from "@clerk/nextjs/server";
-import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 
 // Remove better-auth imports and use Clerk instead
 export { auth, clerkClient };
@@ -9,7 +7,7 @@ export { auth, clerkClient };
 // Helper to check if user has pro plan
 export async function checkUserHasPro() {
   const { userId, has } = await auth();
-  
+
   if (!userId) {
     return { isAuthenticated: false, hasPro: false };
   }

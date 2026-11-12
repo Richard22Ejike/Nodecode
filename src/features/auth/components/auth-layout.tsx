@@ -18,26 +18,38 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
 
   if (!isLoaded) {
     return (
-      <div className="bg-muted flex min-h-svh flex-col justify-center items-center gap-6 p-6 md:p-10">
+      <div className="bg-background bg-dot-grid flex min-h-svh flex-col justify-center items-center gap-6 p-6 md:p-10">
         <div className="flex w-full max-w-sm flex-col gap-6">
-          <div className="flex items-center gap-2 self-center font-medium">
-            <Image src="/logos/logo.svg" alt="Logo" height={30} width={30} />
+          <div className="flex items-center gap-2 self-center font-semibold tracking-[-0.01em]">
+            <Image
+              src="/logos/logo.svg"
+              alt="Logo"
+              height={30}
+              width={30}
+              className="h-[30px] w-[30px] shrink-0"
+            />
             Nodebase
           </div>
-          <div className="text-center">Loading...</div>
+          <div className="text-center text-muted-foreground">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-muted flex min-h-svh flex-col justify-center items-center gap-6 p-6 md:p-10">
+    <div className="bg-background bg-dot-grid flex min-h-svh flex-col justify-center items-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <Link
           href="/"
-          className="flex items-center gap-2 self-center font-medium"
+          className="flex items-center gap-2 self-center font-semibold tracking-[-0.01em]"
         >
-          <Image src="/logos/logo.svg" alt="Logo" height={30} width={30} />
+          <Image
+            src="/logos/logo.svg"
+            alt="Logo"
+            height={30}
+            width={30}
+            className="h-[30px] w-[30px] shrink-0"
+          />
           Nodebase
         </Link>
         {children}

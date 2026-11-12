@@ -1,7 +1,8 @@
 // src/trpc/init.ts
+
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { cache } from "react";
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import superjson from "superjson";
 import prisma from "@/lib/db";
 
@@ -9,43 +10,45 @@ import prisma from "@/lib/db";
 export const createTRPCContext = cache(async () => {
   try {
     const authData = await auth();
-    
+
     if (!authData || !authData.userId) {
       return {
         userId: null,
+        orgId: null,
         isAuthenticated: false,
         user: null,
       };
     }
 
     const { userId } = authData;
-    
+    const orgId = authData.orgId ?? null;
+
     // Get full user data from Clerk
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(userId);
-    
+
     const email = clerkUser.emailAddresses[0]?.emailAddress || "";
     const name = clerkUser.firstName || clerkUser.username || email || "User";
-    
+
     let dbUser = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     // If user doesn't exist by Clerk ID, check by email
     if (!dbUser && email) {
       const existingUserByEmail = await prisma.user.findUnique({
-        where: { email }
+        where: { email },
       });
-      
+
       if (existingUserByEmail) {
         // Update the existing user's ID to match Clerk
         // First, delete any sessions/accounts linked to the old ID
         await prisma.$transaction([
           prisma.session.deleteMany({
-            where: { userId: existingUserByEmail.id }
+            where: { userId: existingUserByEmail.id },
           }),
           prisma.account.deleteMany({
-            where: { userId: existingUserByEmail.id }
+            where: { userId: existingUserByEmail.id },
           }),
           // Update the user's ID
           prisma.user.update({
@@ -57,12 +60,12 @@ export const createTRPCContext = cache(async () => {
               image: clerkUser.imageUrl,
               emailVerified: true,
               updatedAt: new Date(),
-            }
-          })
+            },
+          }),
         ]);
-        
+
         dbUser = await prisma.user.findUnique({
-          where: { id: userId }
+          where: { id: userId },
         });
       }
     }
@@ -76,12 +79,13 @@ export const createTRPCContext = cache(async () => {
           email,
           image: clerkUser.imageUrl,
           emailVerified: true,
-        }
+        },
       });
     }
-    
+
     return {
       userId,
+      orgId,
       isAuthenticated: true,
       user: {
         id: userId,
@@ -96,6 +100,7 @@ export const createTRPCContext = cache(async () => {
     console.error("❌ Error creating tRPC context:", error);
     return {
       userId: null,
+      orgId: null,
       isAuthenticated: false,
       user: null,
     };
@@ -114,9 +119,9 @@ export const baseProcedure = t.procedure;
 // Protected procedure (requires authentication)
 export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.userId || !ctx.user) {
-    throw new TRPCError({ 
+    throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "You must be logged in to access this resource"
+      message: "You must be logged in to access this resource",
     });
   }
   return next({
@@ -125,6 +130,7 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
       auth: {
         user: ctx.user,
         userId: ctx.userId,
+        orgId: ctx.orgId,
       },
     },
   });

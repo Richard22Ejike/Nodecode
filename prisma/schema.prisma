@@ -99,6 +99,7 @@ enum CredentialType {
   GEMINI
   OPENAI
   TELEGRAM
+  WHATSAPP
 }
 
 model Workflow {
@@ -107,12 +108,18 @@ model Workflow {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  // Creator. Their credentials are used when the workflow runs.
   userId String 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Clerk organization that owns the workflow. Null = personal workspace.
+  organizationId String?
 
   nodes Node[]
   connections Connection[]
   executions Execution[]
+
+  @@index([organizationId])
 }
 
 enum NodeType {
@@ -126,6 +133,19 @@ enum NodeType {
   DISCORD
   SLACK
   TELEGRAM
+  TELEGRAM_SEND
+  WHATSAPP_TRIGGER
+  WHATSAPP
+  BROWSE_TRIGGER
+  FETCH_TRIGGER
+  SEARCH_TRIGGER
+  SCRIPT
+  OPEN_URL
+  ACT
+  OBSERVE
+  EXTRACT
+  AGENT
+  SEND_EMAIL
 }
 
 model Node {

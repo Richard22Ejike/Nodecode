@@ -1,6 +1,5 @@
-import { inngest } from "@/inngest/client";
+import { type NextRequest, NextResponse } from "next/server";
 import { sendWorkflowExecution } from "@/inngest/utils";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +12,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Missing required query params",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: "Failed to process google form submission",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

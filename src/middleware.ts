@@ -9,19 +9,19 @@ export default clerkMiddleware(async (auth, req) => {
   // Define protected routes
   const protectedRoutes = [
     "/workflows",
-    "/credentials", 
+    "/credentials",
     "/executions",
     "/subscription",
   ];
-  
-  const isProtectedRoute = protectedRoutes.some(route => 
-    path === route || path.startsWith(`${route}/`)
+
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => path === route || path.startsWith(`${route}/`),
   );
 
   // Define pro routes
   const proRoutes = ["/subscription"];
-  const isProRoute = proRoutes.some(route => 
-    path === route || path.startsWith(`${route}/`)
+  const isProRoute = proRoutes.some(
+    (route) => path === route || path.startsWith(`${route}/`),
   );
 
   // Handle authentication
@@ -35,7 +35,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (userId && isProRoute) {
     const hasPro = has({ plan: "pro" });
     if (!hasPro) {
-      return NextResponse.redirect(new URL("/subscription/upgrade", req.url));
+      return NextResponse.redirect(new URL("/upgrade", req.url));
     }
   }
 

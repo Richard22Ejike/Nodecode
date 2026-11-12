@@ -1,7 +1,19 @@
 // src/components/app-sidebar.tsx
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
+import {
+  CreditCardIcon,
+  FolderOpenIcon,
+  HistoryIcon,
+  KeyIcon,
+  LogOutIcon,
+  StarIcon,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { OrgSwitcher } from "@/components/org-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -13,17 +25,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  CreditCardIcon,
-  FolderOpenIcon,
-  HistoryIcon,
-  KeyIcon,
-  LogOutIcon,
-  StarIcon,
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { useClerk, useUser } from "@clerk/nextjs";
 import { useHasActiveSubscription } from "@/features/subscriptions/hooks/use-subscription";
 
 const menuItems = [
@@ -53,7 +54,6 @@ export const AppSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { signOut } = useClerk();
-  const { user } = useUser();
 
   const { isLoading, hasActiveSubscription } = useHasActiveSubscription();
 
@@ -84,11 +84,17 @@ export const AppSidebar = () => {
                 alt="Nodebase"
                 width={30}
                 height={30}
+                className="h-[30px] w-[30px] shrink-0"
               />
-              <span className="font-semibold text-sm">Nodebase</span>
+              <span className="font-semibold text-sm tracking-[-0.01em]">
+                Nodebase
+              </span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
+        <div className="px-2 group-data-[collapsible=icon]:hidden">
+          <OrgSwitcher />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         {menuItems.map((group) => (
@@ -105,7 +111,7 @@ export const AppSidebar = () => {
                           : pathname.startsWith(item.url)
                       }
                       asChild
-                      className="gap-x-4 h-10 px-4"
+                      className="gap-x-4 h-10 px-4 data-[active=true]:[&>svg]:text-signal"
                     >
                       <Link href={item.url} prefetch>
                         <item.icon className="size-4" />{" "}

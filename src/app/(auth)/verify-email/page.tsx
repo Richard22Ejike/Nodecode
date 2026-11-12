@@ -1,7 +1,7 @@
 // src/app/verify-email/page.tsx
 "use client";
 
-import { useSignUp, useClerk } from "@clerk/nextjs";
+import { useClerk, useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function VerifyEmailPage() {
   const { signUp } = useSignUp();
@@ -40,7 +41,7 @@ export default function VerifyEmailPage() {
 
       // After verification, try to finalize the sign-up
       const finalizeResult = await signUp.finalize();
-      
+
       if (finalizeResult.error) {
         throw new Error(finalizeResult.error.message);
       }
@@ -53,9 +54,9 @@ export default function VerifyEmailPage() {
       } else {
         toast.info("Please complete the sign-up process");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Verification error:", error);
-      toast.error(error.message || "Failed to verify email");
+      toast.error(getErrorMessage(error, "Failed to verify email"));
     } finally {
       setIsLoading(false);
     }
@@ -71,8 +72,8 @@ export default function VerifyEmailPage() {
         throw new Error(result.error.message);
       }
       toast.success("Verification code sent!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send code");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to send code"));
     }
   };
 
